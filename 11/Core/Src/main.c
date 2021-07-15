@@ -63,13 +63,11 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
-void EEPROMWriteExample();
-void EEPROMReadExample(uint8_t *Rdata, uint16_t len);
-
 void IOExpenderInit();
-void IOExpenderReadPinA(uint8_t *Rdata);
-void IOExpenderWritePinB(uint8_t Wdata);
-
+void eeromWrite();
+void eeromRead();
+void ioxdWrite();
+void ioxdRead();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -127,15 +125,15 @@ int main(void)
 		if(BlueButton[0] == 0 && BlueButton[1] == 1){
 
 			//อ่านจากปุ่มและไปเขียนใน eeprom
-			HAL_I2C_Mem_Read_IT(&hi2c1, IOEXPD_ADDR, 0x12, I2C_MEMADD_SIZE_8BIT,&IOExpdrDataReadBack, 1);
+			ioxdRead();
 			HAL_Delay(100);
-			HAL_I2C_Mem_Write_IT(&hi2c1, EEPROM_ADDR, 0x27, I2C_MEMADD_SIZE_16BIT,&IOExpdrDataReadBack, 1);
+			eeromWrite();
 			HAL_Delay(100);
 
 			//อ่านจาก eeprom และไปเขียนส่งค่าให้ LED
-			HAL_I2C_Mem_Read_IT(&hi2c1, EEPROM_ADDR, 0x27, I2C_MEMADD_SIZE_16BIT,&IOExpdrDataWrite, 1);
+			eeromRead();
 			HAL_Delay(100);
-			HAL_I2C_Mem_Write_IT(&hi2c1, IOEXPD_ADDR, 0x15, I2C_MEMADD_SIZE_8BIT,&IOExpdrDataWrite, 1);
+			ioxdWrite();
 
 
 		}
@@ -293,22 +291,38 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void EEPROMWriteExample() {
-	if (eepromExampleWriteFlag && hi2c1.State == HAL_I2C_STATE_READY) {
-
-		static uint8_t data[4] = { 0xff, 0x00, 0x55, 0xaa };//ทำให้ data ไม่หายไป เ�?็บ data
-		HAL_I2C_Mem_Write_IT(&hi2c1, EEPROM_ADDR, 0x2C, I2C_MEMADD_SIZE_16BIT,
-				data, 4);
-		eepromExampleWriteFlag = 0;
-	}
+//void EEPROMWriteExample() {
+//	if (eepromExampleWriteFlag && hi2c1.State == HAL_I2C_STATE_READY) {
+//
+//		static uint8_t data[4] = { 0xff, 0x00, 0x55, 0xaa };//ทำให้ data ไม่หายไป เ�?็บ data
+//		HAL_I2C_Mem_Write_IT(&hi2c1, EEPROM_ADDR, 0x2C, I2C_MEMADD_SIZE_16BIT,
+//				data, 4);
+//		eepromExampleWriteFlag = 0;
+//	}
+//}
+//void EEPROMReadExample(uint8_t *Rdata, uint16_t len) {
+//	if (eepromExampleReadFlag && hi2c1.State == HAL_I2C_STATE_READY)
+//	{
+//
+//		HAL_I2C_Mem_Read_IT(&hi2c1, EEPROM_ADDR, 0x2c, I2C_MEMADD_SIZE_16BIT,Rdata, len);
+//		eepromExampleReadFlag = 0;
+//	}
+//}
+void eeromWrite()
+{
+	HAL_I2C_Mem_Write_IT(&hi2c1, EEPROM_ADDR, 0x27, I2C_MEMADD_SIZE_16BIT,&IOExpdrDataReadBack, 1);
 }
-void EEPROMReadExample(uint8_t *Rdata, uint16_t len) {
-	if (eepromExampleReadFlag && hi2c1.State == HAL_I2C_STATE_READY)
-	{
-
-		HAL_I2C_Mem_Read_IT(&hi2c1, EEPROM_ADDR, 0x2c, I2C_MEMADD_SIZE_16BIT,Rdata, len);
-		eepromExampleReadFlag = 0;
-	}
+void eeromRead()
+{
+	HAL_I2C_Mem_Read_IT(&hi2c1, EEPROM_ADDR, 0x27, I2C_MEMADD_SIZE_16BIT,&IOExpdrDataWrite, 1);
+}
+void ioxdWrite()
+{
+	HAL_I2C_Mem_Write_IT(&hi2c1, IOEXPD_ADDR, 0x15, I2C_MEMADD_SIZE_8BIT,&IOExpdrDataWrite, 1);
+}
+void ioxdRead()
+{
+	HAL_I2C_Mem_Read_IT(&hi2c1, IOEXPD_ADDR, 0x12, I2C_MEMADD_SIZE_8BIT,&IOExpdrDataReadBack, 1);
 }
 void IOExpenderInit() {
 	//Init All
@@ -318,22 +332,22 @@ void IOExpenderInit() {
 	HAL_I2C_Mem_Write(&hi2c1, IOEXPD_ADDR, 0x00, I2C_MEMADD_SIZE_8BIT, Setting,
 			0x16, 100);
 }
-void IOExpenderReadPinA(uint8_t *Rdata) {
-	if (IOExpdrExampleReadFlag && hi2c1.State == HAL_I2C_STATE_READY) {
-		HAL_I2C_Mem_Read_IT(&hi2c1, IOEXPD_ADDR, 0x12, I2C_MEMADD_SIZE_8BIT,
-				Rdata, 1);
-		IOExpdrExampleReadFlag =0;
-	}
-}
-void IOExpenderWritePinB(uint8_t Wdata) {
-	if (IOExpdrExampleWriteFlag && hi2c1.State == HAL_I2C_STATE_READY) {
-		static uint8_t data;
-		data = Wdata;
-		HAL_I2C_Mem_Write_IT(&hi2c1, IOEXPD_ADDR, 0x15, I2C_MEMADD_SIZE_8BIT,
-				&data, 1);
-		IOExpdrExampleWriteFlag=0;
-	}
-}
+//void IOExpenderReadPinA(uint8_t *Rdata) {
+//	if (IOExpdrExampleReadFlag && hi2c1.State == HAL_I2C_STATE_READY) {
+//		HAL_I2C_Mem_Read_IT(&hi2c1, IOEXPD_ADDR, 0x12, I2C_MEMADD_SIZE_8BIT,
+//				Rdata, 1);
+//		IOExpdrExampleReadFlag =0;
+//	}
+//}
+//void IOExpenderWritePinB(uint8_t Wdata) {
+//	if (IOExpdrExampleWriteFlag && hi2c1.State == HAL_I2C_STATE_READY) {
+//		static uint8_t data;
+//		data = Wdata;
+//		HAL_I2C_Mem_Write_IT(&hi2c1, IOEXPD_ADDR, 0x15, I2C_MEMADD_SIZE_8BIT,
+//				&data, 1);
+//		IOExpdrExampleWriteFlag=0;
+//	}
+//}
 /* USER CODE END 4 */
 
 /**
